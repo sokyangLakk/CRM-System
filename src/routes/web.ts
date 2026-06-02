@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { AuthController } from '../Controllers/AuthController';
-import { authMiddleware } from '../middlewares/AuthMiddleware';
-import { DashboardController } from '../Controllers/DashboardController';
-import { StudentController } from '../Controllers/StudentController';
 import { CleaningController } from '../Controllers/CleaningController';
+import { StudentController } from '../Controllers/StudentController';
 import { TeacherController } from '../Controllers/TeacherController';
+import { PunishmentController } from '../Controllers/PunishmentController';
+import { DashboardController } from '../Controllers/DashboardController';
+import { ClassController } from '../Controllers/ClassController';
+import { authMiddleware } from '../middlewares/AuthMiddleware';
 import { adminMiddleware, teacherOrAdminMiddleware } from '../middlewares/AdminMiddleware';
 const router = Router();
 
@@ -40,6 +42,15 @@ router.get('/cleaning/tasks', authMiddleware as any, CleaningController.getTasks
 router.put('/cleaning/assignments/:assignmentId', authMiddleware as any, CleaningController.updateAssignmentStatus as any);
 
 
+// --- Disciplinary Punishment Routes ---
+router.post('/punishments', authMiddleware as any, teacherOrAdminMiddleware as any, PunishmentController.issuePunishment as any);
+router.get('/punishments', authMiddleware as any, teacherOrAdminMiddleware as any, PunishmentController.getPunishments as any);
+router.put('/punishments/:id', authMiddleware as any, teacherOrAdminMiddleware as any, PunishmentController.resolvePunishment as any);
 
-
+// --- Classes Routes ---
+router.post('/classes', authMiddleware as any, adminMiddleware as any, ClassController.createClass as any);
+router.get('/classes', authMiddleware as any, ClassController.getClasses as any);
+router.get('/classes/:id', authMiddleware as any, ClassController.getClassById as any);
+router.put('/classes/:id', authMiddleware as any, adminMiddleware as any, ClassController.updateClass as any);
+router.delete('/classes/:id', authMiddleware as any, adminMiddleware as any, ClassController.deleteClass as any);
 export default router;
