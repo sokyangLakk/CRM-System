@@ -39,4 +39,7 @@ router.get('/cleaning/tasks', authMiddleware as any, CleaningController.getTasks
 
 router.put('/cleaning/assignments/:assignmentId', authMiddleware as any, CleaningController.updateAssignmentStatus as any);
 
+
+
+
 export default router;
