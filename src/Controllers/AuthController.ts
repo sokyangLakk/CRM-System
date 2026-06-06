@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { BaseController } from './BaseController.';
+import { BaseController } from './BaseController';
 import { UserService } from '../Services/UserService';
 
 class AuthControllerImpl extends BaseController {

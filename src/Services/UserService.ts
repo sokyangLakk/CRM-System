@@ -80,7 +80,12 @@ export class UserService {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new Error('Invalid credentials');
+      if (password !== user.password) {
+        throw new Error('Invalid credentials');
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await UserRepository.update(user.id!, { password: hashedPassword });
     }
 
     // Generate token

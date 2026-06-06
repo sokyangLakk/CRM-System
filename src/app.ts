@@ -12,9 +12,10 @@ app.use('/api', router);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     message: 'CRM System Backend API is active',
-    status: 'healthy',
+    status: 'success',
     timestamp: new Date()
   });
 });
 
 export default app;
+

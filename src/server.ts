@@ -7,19 +7,17 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 async function startServer() {
+  app.listen(PORT, () => {
+    console.log(`Server is listening at http://localhost:${PORT}`);
+  });
+
   try {
-    // Test the database connection pool
     const connection = await pool.getConnection();
     console.log('Connected to MySQL successfully');
-    connection.release(); // Return connection to the pool
-
-    // Start Express listener
-    app.listen(PORT, () => {
-      console.log(`Server is listening at http://localhost:${PORT}`);
-    });
+    connection.release();
   } catch (error) {
-    console.error('Database connection failed:', error);
-    process.exit(1); // Stop the application
+    console.error('Database connection failed. Is MySQL running and is .env configured correctly?');
+    console.error(error);
   }
 }
 

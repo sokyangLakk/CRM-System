@@ -1,5 +1,5 @@
-import pool from '../Config/db';
-import { RowDataPacket } from 'mysql2';
+import pool from "../Config/db";
+import { RowDataPacket } from "mysql2";
 
 export class StudentTrackingService {
   /**
@@ -10,41 +10,44 @@ export class StudentTrackingService {
    */
   static async getStudentProfile(studentId: number): Promise<any> {
     const [studentRows] = await pool.execute<RowDataPacket[]>(
-      `SELECT s.*, c.class_name, t.name as advisor_name 
-       FROM students s 
-       LEFT JOIN classes c ON s.class_id = c.id
-       LEFT JOIN teachers t ON c.advisor_id = t.id
-       WHERE s.id = ?`,
-      [studentId]
+      `SELECT s.*, c.class_name as class_name, t.name as advisor_name 
+     FROM students s 
+     LEFT JOIN classes c ON s.class_id = c.id
+     LEFT JOIN teachers t ON c.advisor_id = t.id
+     WHERE s.id = ?`,
+      [studentId],
     );
 
     if (studentRows.length === 0) return null;
     const student = studentRows[0];
 
     const [cleaningRows] = await pool.execute<RowDataPacket[]>(
-      `SELECT ca.*, cs.date, ct.task_name 
-       FROM cleaning_assignments ca
-       JOIN cleaning_schedules cs ON ca.schedule_id = cs.id
-       JOIN cleaning_tasks ct ON ca.task_id = ct.id
-       WHERE ca.student_id = ?
-       ORDER BY cs.date DESC`,
-      [studentId]
+      `SELECT ca.*, cs.schedule_date as date, ct.task_name 
+     FROM cleaning_assignments ca
+     JOIN cleaning_schedules cs ON ca.schedule_id = cs.id
+     JOIN cleaning_tasks ct ON ca.task_id = ct.id
+     WHERE ca.student_id = ?
+     ORDER BY cs.schedule_date DESC`,
+      [studentId],
     );
 
     const [punishmentRows] = await pool.execute<RowDataPacket[]>(
       `SELECT pr.*, t.name as teacher_name 
-       FROM punishment_records pr
-       LEFT JOIN teachers t ON pr.created_by = t.id
-       WHERE pr.student_id = ?
-       ORDER BY pr.created_at DESC`,
-      [studentId]
+     FROM punishment_records pr
+     LEFT JOIN teachers t ON pr.teacher_id = t.id
+     WHERE pr.student_id = ?
+     ORDER BY pr.created_at DESC`,
+      [studentId],
     );
 
     // Calculate score
     const initialScore = 100;
-    const cleaningPoints = cleaningRows.reduce((sum: number, item: any) => sum + (item.points_earned || 0), 0);
+    const cleaningPoints = cleaningRows.reduce(
+      (sum: number, item: any) => sum + (item.points_earned || 0),
+      0,
+    );
     const punishmentPoints = punishmentRows
-      .filter((item: any) => item.status !== 'appealed')
+      .filter((item: any) => item.status === "active")
       .reduce((sum: number, item: any) => sum + (item.points_deducted || 0), 0);
 
     const currentScore = initialScore + cleaningPoints - punishmentPoints;
@@ -55,10 +58,10 @@ export class StudentTrackingService {
         initial_score: initialScore,
         cleaning_bonus: cleaningPoints,
         punishment_penalty: punishmentPoints,
-        current_score: currentScore
+        current_score: currentScore,
       },
       cleaning_history: cleaningRows,
-      disciplinary_records: punishmentRows
+      disciplinary_records: punishmentRows,
     };
   }
 }

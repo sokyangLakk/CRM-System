@@ -1,10 +1,9 @@
-              import { Response } from 'express';
-              import { AuthenticatedRequest } from '../middlewares/AuthMiddleware';
-              import { StudentModel } from '../Models/Student';
-              import { UserModel } from '../Models/User';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../middlewares/AuthMiddleware.js';
+import { ActivityLogModel } from '../Models/ActivityLog';
+import { StudentModel } from '../Models/Student';
+import { UserModel } from '../Models/User';
 import { StudentTrackingService } from '../Services/StudentTrackingService';
-            //   import { StudentTrackingService } from '../Services/StudentTrackingService';
-            //   import { ActivityLogModel } from '../Models/ActivityLog';
 
 export class StudentController {
   static async getStudents(req: AuthenticatedRequest, res: Response): Promise<void> {
