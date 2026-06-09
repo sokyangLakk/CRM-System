@@ -1,17 +1,17 @@
-import { PunishmentRecordRepository } from '../repositories/PunishmentRecordRepository';
-import { StudentRepository } from '../repositories/StudentRepository';
-import { TeacherRepository } from '../repositories/TeacherRepository';
-import { ActivityLogRepository } from '../repositories/ActivityLogRepository';
-import { NotificationService } from './NotificationService';
+import { PunishmentRecordRepository } from "../repositories/PunishmentRecordRepository";
+import { StudentRepository } from "../repositories/StudentRepository";
+import { TeacherRepository } from "../repositories/TeacherRepository";
+import { ActivityLogRepository } from "../repositories/ActivityLogRepository";
+import { NotificationService } from "./NotificationService";
 export class PunishmentService {
     static async issuePunishmentService(data, editorRole, editorUserId, ipAddress) {
         const student = await StudentRepository.findById(data.student_id);
         if (!student) {
-            throw new Error('Student not found');
+            throw new Error("Student not found");
         }
         // Find the teacher profile of the currently logged-in user if applicable
         let teacherId = null;
-        if (editorRole === 'teacher' && editorUserId) {
+        if (editorRole === "teacher" && editorUserId) {
             const teacher = await TeacherRepository.findByUserId(editorUserId);
             teacherId = teacher?.id || null;
         }
@@ -20,8 +20,8 @@ export class PunishmentService {
             offense: data.offense,
             punishment_type: data.punishment_type,
             points_deducted: data.points_deducted ?? 10,
-            status: 'pending',
-            created_by: teacherId
+            status: "pending",
+            created_by: teacherId,
         });
         // Send mock notification
         if (student.email) {
@@ -30,9 +30,9 @@ export class PunishmentService {
         if (editorUserId) {
             await ActivityLogRepository.create({
                 user_id: editorUserId,
-                action: 'ISSUE_PUNISHMENT',
+                action: "ISSUE_PUNISHMENT",
                 description: `Issued punishment to student ${student.name}. Offense: ${data.offense}. Deducted points: ${data.points_deducted ?? 10}`,
-                ip_address: ipAddress || null
+                ip_address: ipAddress || null,
             });
         }
         return recordId;
@@ -42,9 +42,9 @@ export class PunishmentService {
         if (success && editorUserId) {
             await ActivityLogRepository.create({
                 user_id: editorUserId,
-                action: 'RESOLVE_PUNISHMENT',
+                action: "RESOLVE_PUNISHMENT",
                 description: `Resolved punishment record ${recordId} with status: ${status}`,
-                ip_address: ipAddress || null
+                ip_address: ipAddress || null,
             });
         }
         return success;
@@ -57,10 +57,10 @@ export class PunishmentService {
         const recordId = await PunishmentRecordRepository.create(record);
         const studentRecords = await PunishmentRecordRepository.findByStudentId(record.student_id);
         const totalDeducted = studentRecords
-            .filter((r) => r.status !== 'appealed')
+            .filter((r) => r.status !== "appealed")
             .reduce((sum, r) => sum + (r.points_deducted || 0), 0);
         if (totalDeducted >= 100) {
-            await StudentRepository.update(record.student_id, { status: 'suspended' });
+            await StudentRepository.update(record.student_id, { status: "inactive" });
         }
         return recordId;
     }
@@ -68,16 +68,20 @@ export class PunishmentService {
         const record = await PunishmentRecordRepository.findById(recordId);
         if (!record)
             return false;
-        const success = await PunishmentRecordRepository.update(recordId, { status });
-        if (success && status === 'appealed') {
+        const success = await PunishmentRecordRepository.update(recordId, {
+            status,
+        });
+        if (success && status === "appealed") {
             const student = await StudentRepository.findById(record.student_id);
-            if (student && student.status === 'suspended') {
+            if (student && student.status === "inactive") {
                 const studentRecords = await PunishmentRecordRepository.findByStudentId(record.student_id);
                 const totalDeducted = studentRecords
-                    .filter((r) => r.status !== 'appealed')
+                    .filter((r) => r.status !== "appealed")
                     .reduce((sum, r) => sum + (r.points_deducted || 0), 0);
                 if (totalDeducted < 100) {
-                    await StudentRepository.update(record.student_id, { status: 'active' });
+                    await StudentRepository.update(record.student_id, {
+                        status: "active",
+                    });
                 }
             }
         }

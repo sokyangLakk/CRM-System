@@ -5,10 +5,15 @@ import { StudentRepository } from '../repositories/StudentRepository';
 import { ActivityLogRepository } from '../repositories/ActivityLogRepository';
 export class CleaningService {
     static async createSchedule(data, editorId, ipAddress) {
-        const scheduleId = await CleaningScheduleRepository.create({
+        // Set default values if not provided
+        const scheduleData = {
             date: data.date,
+            day_type: data.day_type || 'normal', // Default to 'normal'
+            class_id: data.class_id || 1, // Default to class_id 1
+            teacher_id: data.teacher_id || 1, // Default to teacher_id 1
             description: data.description
-        });
+        };
+        const scheduleId = await CleaningScheduleRepository.create(scheduleData);
         if (data.autoAssign) {
             await this.autoAssignStudents(scheduleId);
         }
@@ -55,10 +60,6 @@ export class CleaningService {
         }
         return success;
     }
-    /**
-     * Automatically assigns active students to a cleaning schedule.
-     * Cycles through active students to ensure fair distribution.
-     */
     static async autoAssignStudents(scheduleId) {
         const students = await StudentRepository.findAll();
         const activeStudents = students.filter((s) => s.status === 'active');
@@ -69,7 +70,6 @@ export class CleaningService {
         if (tasks.length === 0) {
             throw new Error('No cleaning tasks defined.');
         }
-        // For simplicity, we randomly assign active students to each task.
         for (const task of tasks) {
             const randomStudent = activeStudents[Math.floor(Math.random() * activeStudents.length)];
             await CleaningAssignmentRepository.create({

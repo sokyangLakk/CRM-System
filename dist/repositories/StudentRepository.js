@@ -1,7 +1,7 @@
 import pool from '../Config/db';
 export class StudentRepository {
     static async create(student) {
-        const [result] = await pool.execute('INSERT INTO students (user_id, name, student_number, class_id, email, phone, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [student.user_id || null, student.name, student.student_number, student.class_id || null, student.email || null, student.phone || null, student.status || 'active']);
+        const [result] = await pool.execute('INSERT INTO students (user_id, name, student_number, class_id, gender, email, phone, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [student.user_id || null, student.name, student.student_number, student.class_id || null, student.gender || null, student.email || null, student.phone || null, student.status || 'active']);
         return result.insertId;
     }
     static async findById(id) {
@@ -9,10 +9,9 @@ export class StudentRepository {
         return rows.length > 0 ? rows[0] : null;
     }
     static async findProfileById(id) {
-        const [rows] = await pool.execute(`SELECT s.*, c.class_name, t.name as advisor_name 
+        const [rows] = await pool.execute(`SELECT s.*, c.name as class_name 
        FROM students s 
        LEFT JOIN classes c ON s.class_id = c.id
-       LEFT JOIN teachers t ON c.advisor_id = t.id
        WHERE s.id = ?`, [id]);
         return rows.length > 0 ? rows[0] : null;
     }
@@ -38,6 +37,10 @@ export class StudentRepository {
         if (data.class_id !== undefined) {
             fields.push('class_id = ?');
             values.push(data.class_id);
+        }
+        if (data.gender !== undefined) {
+            fields.push('gender = ?');
+            values.push(data.gender);
         }
         if (data.email !== undefined) {
             fields.push('email = ?');
@@ -66,7 +69,7 @@ export class StudentRepository {
         return result.affectedRows > 0;
     }
     static async findAll() {
-        const [rows] = await pool.execute(`SELECT s.*, c.class_name 
+        const [rows] = await pool.execute(`SELECT s.*, c.name as class_name 
        FROM students s 
        LEFT JOIN classes c ON s.class_id = c.id`);
         return rows;

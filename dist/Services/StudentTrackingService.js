@@ -1,4 +1,4 @@
-import pool from '../Config/db';
+import pool from "../Config/db";
 export class StudentTrackingService {
     /**
      * Tracks a student's history, aggregating performance scores.
@@ -15,12 +15,12 @@ export class StudentTrackingService {
         if (studentRows.length === 0)
             return null;
         const student = studentRows[0];
-        const [cleaningRows] = await pool.execute(`SELECT ca.*, cs.date, ct.task_name 
+        const [cleaningRows] = await pool.execute(`SELECT ca.*, cs.schedule_date, ct.task_name 
        FROM cleaning_assignments ca
        JOIN cleaning_schedules cs ON ca.schedule_id = cs.id
        JOIN cleaning_tasks ct ON ca.task_id = ct.id
        WHERE ca.student_id = ?
-       ORDER BY cs.date DESC`, [studentId]);
+       ORDER BY cs.schedule_date DESC`, [studentId]);
         const [punishmentRows] = await pool.execute(`SELECT pr.*, t.name as teacher_name 
        FROM punishment_records pr
        LEFT JOIN teachers t ON pr.created_by = t.id
@@ -30,7 +30,7 @@ export class StudentTrackingService {
         const initialScore = 100;
         const cleaningPoints = cleaningRows.reduce((sum, item) => sum + (item.points_earned || 0), 0);
         const punishmentPoints = punishmentRows
-            .filter((item) => item.status !== 'appealed')
+            .filter((item) => item.status !== "appealed")
             .reduce((sum, item) => sum + (item.points_deducted || 0), 0);
         const currentScore = initialScore + cleaningPoints - punishmentPoints;
         return {
@@ -39,10 +39,10 @@ export class StudentTrackingService {
                 initial_score: initialScore,
                 cleaning_bonus: cleaningPoints,
                 punishment_penalty: punishmentPoints,
-                current_score: currentScore
+                current_score: currentScore,
             },
             cleaning_history: cleaningRows,
-            disciplinary_records: punishmentRows
+            disciplinary_records: punishmentRows,
         };
     }
 }
