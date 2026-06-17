@@ -1,8 +1,17 @@
 import pool from '../Config/db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
-import { User } from '../Models/User';
 
-export class UserRepository {
+export interface User {
+  id?: number;
+  username: string;
+  password?: string;
+  email: string;
+  role: 'admin' | 'teacher' | 'student';
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+export class UserModel {
   static async create(user: User): Promise<number> {
     const [result] = await pool.execute<ResultSetHeader>(
       'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)',
@@ -27,17 +36,9 @@ export class UserRepository {
     return rows.length > 0 ? (rows[0] as User) : null;
   }
 
-  static async findByUsernameOrEmail(identifier: string): Promise<User | null> {
-    const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1',
-      [identifier, identifier]
-    );
-    return rows.length > 0 ? (rows[0] as User) : null;
-  }
-
   static async findByEmail(email: string): Promise<User | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT * FROM users WHERE email = ?',
+      'SELECT id, username, email, role FROM users WHERE email = ?',
       [email]
     );
     return rows.length > 0 ? (rows[0] as User) : null;
